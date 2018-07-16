@@ -442,11 +442,11 @@ module Puppet::ResourceApi
 
         #:nocov:
         # codecov fails to register this multiline as covered, even though simplecov does.
-        message = <<MESSAGE.strip
-#{definition[:name]}[#{@title}]#get has not provided canonicalized values.
-Returned values:       #{current_state.inspect}
-Canonicalized values:  #{state_clone.inspect}
-MESSAGE
+        message = <<~MESSAGE.strip
+        #{definition[:name]}[#{@title}]#get has not provided canonicalized values.
+        Returned values:       #{current_state.inspect}
+        Canonicalized values:  #{state_clone.inspect}
+        MESSAGE
         #:nocov:
 
         case Puppet.settings[:strict]
