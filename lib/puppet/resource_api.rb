@@ -1,6 +1,9 @@
 require 'pathname'
 require 'puppet/resource_api/glue'
+require 'puppet/resource_api/parameter'
+require 'puppet/resource_api/property'
 require 'puppet/resource_api/puppet_context' unless RUBY_PLATFORM == 'java'
+require 'puppet/resource_api/read_only_parameter'
 require 'puppet/resource_api/type_definition'
 require 'puppet/resource_api/version'
 require 'puppet/type'
@@ -219,6 +222,7 @@ module Puppet::ResourceApi
 
           type = Puppet::ResourceApi.parse_puppet_type(name, options[:type])
 
+<<<<<<< ffe932a92e2bbea54a65d98912bc4e798fef3770
           if param_or_property == :newproperty
             define_method(:should) do
               if name == :ensure && rs_value.is_a?(String)
@@ -246,30 +250,20 @@ module Puppet::ResourceApi
               # @see Puppet::Property.should=(value)
               @should = [Puppet::ResourceApi.mungify(type, value, "#{definition[:name]}.#{name}")]
             end
+=======
+          # inside of parameter or property provide option to check  and
+          # return data type.
+          define_method(:data_type) do
+            type
+          end
+>>>>>>> Move parameter and properties method creation to modules
 
-            # used internally
-            # @returns the final mungified value of this property
-            define_method(:rs_value) do
-              @should ? @should.first : @should
-            end
+          if param_or_property == :newproperty
+            include Puppet::ResourceApi::Property
+          elsif options[:behaviour] == :read_only
+            include Puppet::ResourceApi::ReadOnlyParameter
           else
-            define_method(:value) do
-              @value
-            end
-
-            define_method(:value=) do |value|
-              if options[:behaviour] == :read_only
-                raise Puppet::ResourceError, "Attempting to set `#{name}` read_only attribute value to `#{value}`"
-              end
-
-              @value = Puppet::ResourceApi.mungify(type, value, "#{definition[:name]}.#{name}")
-            end
-
-            # used internally
-            # @returns the final mungified value of this parameter
-            define_method(:rs_value) do
-              @value
-            end
+            include Puppet::ResourceApi::Parameter
           end
 
           # puppet symbolizes some values through puppet/parameter/value.rb (see .convert()), but (especially) Enums
