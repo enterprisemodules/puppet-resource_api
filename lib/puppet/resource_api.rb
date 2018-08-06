@@ -5,6 +5,7 @@ require 'puppet/resource_api/property'
 require 'puppet/resource_api/puppet_context' unless RUBY_PLATFORM == 'java'
 require 'puppet/resource_api/read_only_parameter'
 require 'puppet/resource_api/type_definition'
+require 'puppet/resource_api/value_creator'
 require 'puppet/resource_api/version'
 require 'puppet/type'
 require 'puppet/util/network_device'
@@ -276,34 +277,10 @@ module Puppet::ResourceApi
             type = type.type
           end
 
-          case type
-          when Puppet::Pops::Types::PStringType
-            # require any string value
-            Puppet::ResourceApi.def_newvalues(self, param_or_property, %r{})
-          when Puppet::Pops::Types::PBooleanType
-            Puppet::ResourceApi.def_newvalues(self, param_or_property, 'true', 'false')
-            aliasvalue true, 'true'
-            aliasvalue false, 'false'
-            aliasvalue :true, 'true' # rubocop:disable Lint/BooleanSymbol
-            aliasvalue :false, 'false' # rubocop:disable Lint/BooleanSymbol
-
-          when Puppet::Pops::Types::PIntegerType
-            Puppet::ResourceApi.def_newvalues(self, param_or_property, %r{^-?\d+$})
-          when Puppet::Pops::Types::PFloatType, Puppet::Pops::Types::PNumericType
-            Puppet::ResourceApi.def_newvalues(self, param_or_property, Puppet::Pops::Patterns::NUMERIC)
-          end
-
-          if param_or_property == :newproperty
-            # stop puppet from trying to call into the provider when
-            # no pre-defined values have been specified
-            # "This is not the provider you are looking for." -- Obi-Wan Kaniesobi.
-            def call_provider(value); end
-          end
-
-          case options[:type]
-          when 'Enum[present, absent]'
-            Puppet::ResourceApi.def_newvalues(self, param_or_property, 'absent', 'present')
-          end
+          Puppet::ResourceApi::ValueCreator.new(self,
+                                                type,
+                                                param_or_property,
+                                                options[:type]).create_values
         end
       end
 
@@ -555,17 +532,6 @@ module Puppet::ResourceApi
 
   def self.class_name_from_type_name(type_name)
     type_name.to_s.split('_').map(&:capitalize).join
-  end
-
-  # Add the value to `this` property or param, depending on whether param_or_property is `:newparam`, or `:newproperty`
-  def self.def_newvalues(this, param_or_property, *values)
-    if param_or_property == :newparam
-      this.newvalues(*values)
-    else
-      values.each do |v|
-        this.newvalue(v) {}
-      end
-    end
   end
 
   def self.caller_is_resource_app?
