@@ -223,41 +223,11 @@ module Puppet::ResourceApi
 
           type = Puppet::ResourceApi.parse_puppet_type(name, options[:type])
 
-<<<<<<< ffe932a92e2bbea54a65d98912bc4e798fef3770
-          if param_or_property == :newproperty
-            define_method(:should) do
-              if name == :ensure && rs_value.is_a?(String)
-                rs_value.to_sym
-              elsif rs_value == false
-                # work around https://tickets.puppetlabs.com/browse/PUP-2368
-                :false # rubocop:disable Lint/BooleanSymbol
-              elsif rs_value == true
-                # work around https://tickets.puppetlabs.com/browse/PUP-2368
-                :true # rubocop:disable Lint/BooleanSymbol
-              else
-                rs_value
-              end
-            end
-
-            define_method(:should=) do |value|
-              @shouldorig = value
-
-              if name == :ensure
-                value = value.to_s
-              end
-
-              # Puppet requires the @should value to always be stored as an array. We do not use this
-              # for anything else
-              # @see Puppet::Property.should=(value)
-              @should = [Puppet::ResourceApi.mungify(type, value, "#{definition[:name]}.#{name}")]
-            end
-=======
           # inside of parameter or property provide option to check  and
           # return data type.
           define_method(:data_type) do
             type
           end
->>>>>>> Move parameter and properties method creation to modules
 
           if param_or_property == :newproperty
             include Puppet::ResourceApi::Property
